@@ -41,12 +41,12 @@ export class YouTrackService {
       );
       const status = statusField ? statusField.value.name : 'Unknown';
 
-      // Format comments
+      // Format comments and convert dates to local time
       const comments = commentsResponse.data.map((comment: any) => ({
         id: comment.id,
         text: comment.text,
         author: comment.author.login,
-        created: comment.created
+        created: new Date(comment.created).toLocaleString()
       }));
 
       return {
@@ -54,8 +54,8 @@ export class YouTrackService {
         summary: ticketResponse.data.summary,
         description: ticketResponse.data.description || '',
         status,
-        created: ticketResponse.data.created,
-        updated: ticketResponse.data.updated,
+        created: new Date(ticketResponse.data.created).toLocaleString(),
+        updated: new Date(ticketResponse.data.updated).toLocaleString(),
         comments
       };
     } catch (error: any) {
