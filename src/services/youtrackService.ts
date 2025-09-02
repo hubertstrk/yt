@@ -70,6 +70,57 @@ export class YouTrackService {
       throw new AppError(`Failed to fetch ticket information: ${error.message}`, 500);
     }
   }
+
+    async getTicketsChangedByRange(range: 'today' | 'yesterday'): Promise<TicketInfo[]> {
+      try {
+      const client = this.getAxiosInstance();
+
+      // Fetch issues updated in the date range
+      const issuesResponse = await client.get('/api/issues', {
+        params: {
+          query: `updated: ${range}`,
+          fields: 'id,summary,description,created,updated,customFields(name,value(name))',
+          $top: 20
+        }
+      });
+
+      const issues = issuesResponse.data;
+
+      // comments for each issue
+      const commentsByIssueId: Record<string, any[]> = {};
+      await Promise.all(
+        issues.map(async (issue: any) => {
+          const commentsResponse = await client.get(`/api/issues/${issue.id}/comments`, {
+            params: { fields: 'id,text,author(login),created' }
+          });
+          commentsByIssueId[issue.id] = commentsResponse.data.map((comment: any) => ({
+            id: comment.id,
+            text: comment.text,
+            author: comment.author.login,
+            created: new Date(comment.created).toLocaleString()
+          }));
+        })
+      );
+
+      // Map issues to TicketInfo format
+      const tickets: TicketInfo[] = issues.map((issue: any) => {
+        // issue.customFields
+
+        return {
+          id: issue.id,
+          summary: issue.summary,
+          description: issue.description || '',
+          created: new Date(issue.created).toLocaleString(),
+          updated: new Date(issue.updated).toLocaleString(),
+          comments: commentsByIssueId[issue.id] || []
+        };
+      });
+
+      return tickets;
+    } catch (error: any) {
+      throw new AppError(`Failed to fetch changed tickets: ${error.message}`, 500);
+    }
+  }
 }
 
 export default new YouTrackService();

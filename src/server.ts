@@ -27,6 +27,7 @@ export const startServer = (port: number | string) => {
     console.log('Examples:');
     console.log(`  - curl http://localhost:${port}/api/health`);
     console.log(`  - curl http://localhost:${port}/api/ticket/PROJECT-123`);
+    console.log(`  - curl http://localhost:${port}/api/tickets/changes/[today|yesterday]`);
   });
 };
 

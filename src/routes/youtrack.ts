@@ -10,7 +10,9 @@ const validateTicketId = (ticketId: string): boolean => {
   return /^[A-Za-z]+-\d+$/.test(ticketId);
 };
 
-// Get ticket information by ID
+/**
+ * Get ticket information by ID
+ */
 youtrackRouter.get('/ticket/:ticketId', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { ticketId } = req.params;
@@ -25,6 +27,22 @@ youtrackRouter.get('/ticket/:ticketId', async (req: Request, res: Response, next
       status: 'success',
       data: ticketInfo
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * Get tickets changed in a given range (today or yesterday)
+ */
+youtrackRouter.get('/tickets/changed/:range', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { range } = req.params;
+    if (!['today', 'yesterday'].includes(range)) {
+      throw new AppError('Invalid range. Use "today" or "yesterday".', 400);
+    }
+    const tickets = await youtrackService.getTicketsChangedByRange(range as 'today' | 'yesterday');
+    res.status(200).json({ status: 'success', data: tickets });
   } catch (error) {
     next(error);
   }
