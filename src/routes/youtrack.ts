@@ -35,7 +35,7 @@ youtrackRouter.get('/ticket/:ticketId', async (req: Request, res: Response, next
 /**
  * Get tickets changed in a given range (today or yesterday)
  */
-youtrackRouter.get('/tickets/changed/:range', async (req: Request, res: Response, next: NextFunction) => {
+youtrackRouter.get('/tickets/changes/:range', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { range } = req.params;
     if (!['today', 'yesterday'].includes(range)) {

@@ -24,7 +24,7 @@ export class YouTrackService {
       // Get ticket details
       const ticketResponse = await client.get(`/api/issues/${ticketId}`, {
         params: {
-          fields: 'id,summary,description,created,updated,customFields(name,value(name))'
+          fields: 'id,idReadable,summary,description,created,updated,customFields(name,value(name))'
         }
       });
 
@@ -35,12 +35,6 @@ export class YouTrackService {
         }
       });
 
-      // Extract status from custom fields
-      const statusField = ticketResponse.data.customFields.find(
-        (field: any) => field.name === 'State'
-      );
-      const status = statusField ? statusField.value.name : 'Unknown';
-
       // Format comments and convert dates to local time
       const comments = commentsResponse.data.map((comment: any) => ({
         id: comment.id,
@@ -50,10 +44,9 @@ export class YouTrackService {
       }));
 
       return {
-        id: ticketResponse.data.id,
+        id: ticketResponse.data.idReadable,
         summary: ticketResponse.data.summary,
         description: ticketResponse.data.description || '',
-        status,
         created: new Date(ticketResponse.data.created).toLocaleString(),
         updated: new Date(ticketResponse.data.updated).toLocaleString(),
         comments
@@ -79,7 +72,7 @@ export class YouTrackService {
       const issuesResponse = await client.get('/api/issues', {
         params: {
           query: `updated: ${range}`,
-          fields: 'id,summary,description,created,updated,customFields(name,value(name))',
+          fields: 'id,idReadable,summary,description,created,updated,customFields(name,value(name))',
           $top: 20
         }
       });
@@ -106,7 +99,7 @@ export class YouTrackService {
       const tickets: TicketInfo[] = issues.map((issue: any) => {
         // issue.customFields
         return {
-          id: issue.id,
+          id: issue.idReadable,
           summary: issue.summary,
           description: issue.description || '',
           created: new Date(issue.created).toLocaleString(),
