@@ -71,8 +71,8 @@ export class YouTrackService {
     }
   }
 
-    async getTicketsChangedByRange(range: 'today' | 'yesterday'): Promise<TicketInfo[]> {
-      try {
+  async getTicketsChangedByRange(range: 'today' | 'yesterday'): Promise<TicketInfo[]> {
+    try {
       const client = this.getAxiosInstance();
 
       // Fetch issues updated in the date range
@@ -105,7 +105,6 @@ export class YouTrackService {
       // Map issues to TicketInfo format
       const tickets: TicketInfo[] = issues.map((issue: any) => {
         // issue.customFields
-
         return {
           id: issue.id,
           summary: issue.summary,
