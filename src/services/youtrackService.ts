@@ -64,14 +64,14 @@ export class YouTrackService {
     }
   }
 
-  async getTicketsChangedByRange(range: 'today' | 'yesterday'): Promise<TicketInfo[]> {
+  async getTicketsChangedByRange(from: string, to: string): Promise<TicketInfo[]> {
     try {
       const client = this.getAxiosInstance();
 
       // Fetch issues updated in the date range
       const issuesResponse = await client.get('/api/issues', {
         params: {
-          query: `updated: ${range}`,
+          query: `updated: ${from} ..  ${to}`,
           fields: 'id,idReadable,summary,description,created,updated,customFields(name,value(name))',
           $top: 20
         }
