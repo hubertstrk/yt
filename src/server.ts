@@ -25,10 +25,11 @@ export const startServer = (port: number | string) => {
     console.log(pico.green(`YouTrack API running on port ${port}`));
     console.log();
     console.log(pico.bold("Available endpoints:"));
-    console.log(`  GET  /health`);
-    console.log(`  GET  /api/ticket/:ticketId`);
-    console.log(`  POST /api/ticket/:parentTicketId/subtask`);
-    console.log(`  GET  /api/tickets/changes/:from/:to`);
+    console.log(`  GET   /health`);
+    console.log(`  GET   /api/ticket/:ticketId`);
+    console.log(`  POST  /api/ticket/:parentTicketId/subtask`);
+    console.log(`  PATCH /api/ticket/:ticketId/description`);
+    console.log(`  GET   /api/tickets/changes/:from/:to`);
     console.log();
     console.log(pico.bold("Examples:"));
     console.log(`  curl http://localhost:${port}/health`);
@@ -45,6 +46,13 @@ export const startServer = (port: number | string) => {
     console.log(
       `    -d '{"title": "My feature", "description": "**Markdown** description"}'`,
     );
+    console.log();
+    console.log(pico.bold("Update ticket description (PowerShell):"));
+    console.log(
+      `  curl.exe -X PATCH http://localhost:${port}/api/ticket/PROJECT-123/description \``,
+    );
+    console.log(`    -H "Content-Type: application/json" \``);
+    console.log(`    -d '{"description": "**Updated** description"}'`);
   });
 };
 

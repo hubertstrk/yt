@@ -6,6 +6,7 @@ A Node.js API service for interacting with YouTrack tickets.
 
 - Fetch ticket content and comments by ticket ID
 - Create a ticket as a subtask of an existing ticket
+- Update the description of an existing ticket (Markdown supported)
 - Fetch tickets changed within a date range
 - Health endpoint for monitoring
 - Environment variable configuration
@@ -173,6 +174,50 @@ Response (`201 Created`):
 ```
 
 The `warnings` array is empty on full success. Non-fatal issues (e.g. failed subtask link) are reported there instead of returning an error.
+
+---
+
+#### Update Ticket Description
+
+Sets (or replaces) the description of an existing ticket. The ticket must exist. Accepts plain text or Markdown.
+
+```
+PATCH /api/ticket/:ticketId/description
+```
+
+Parameters:
+
+- `ticketId`: The ticket ID in the format `PROJECT-123`
+
+Body (JSON):
+| Field | Required | Description |
+|---|---|---|
+| `description` | Yes | New description — plain text or Markdown |
+
+Example (PowerShell):
+
+```powershell
+curl.exe -X PATCH http://localhost:3000/api/ticket/PROJECT-123/description `
+  -H "Content-Type: application/json" `
+  -d '{"description": "## Overview\nThis ticket tracks the new payment flow.\n\n- Step 1\n- Step 2"}'
+```
+
+Example (CMD):
+
+```cmd
+curl -X PATCH http://localhost:3000/api/ticket/PROJECT-123/description -H "Content-Type: application/json" -d "{\"description\": \"## Overview\nThis ticket tracks the new payment flow.\"}"
+```
+
+Response (`200 OK`):
+
+```json
+{
+  "status": "success",
+  "data": {
+    "id": "PROJECT-123"
+  }
+}
+```
 
 ---
 

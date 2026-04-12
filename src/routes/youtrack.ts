@@ -82,6 +82,44 @@ youtrackRouter.post(
 );
 
 /**
+ * Update the description of an existing ticket.
+ * Body: { description } — plain text or Markdown string.
+ */
+youtrackRouter.patch(
+  "/ticket/:ticketId/description",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { ticketId } = req.params;
+
+      if (!validateTicketId(ticketId)) {
+        throw new AppError(
+          "Invalid ticket ID format. Expected format: PROJECT-123",
+          400,
+        );
+      }
+
+      const { description } = req.body;
+
+      if (typeof description !== "string") {
+        throw new AppError("description is required and must be a string", 400);
+      }
+
+      const result = await youtrackService.updateTicketDescription(
+        ticketId,
+        description,
+      );
+
+      res.status(200).json({
+        status: "success",
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+/**
  * Get tickets changed in a given range (today or yesterday)
  */
 youtrackRouter.get(

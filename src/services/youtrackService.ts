@@ -75,7 +75,13 @@ export class YouTrackService {
     parentTicketId: string,
     title: string,
     description: string,
-  ): Promise<{ id: string; parentId: string; warnings: string[] }> {
+  ): Promise<{
+    id: string;
+    parentId: string;
+    title: string;
+    description: string;
+    warnings: string[];
+  }> {
     const client = this.getAxiosInstance();
     const warnings: string[] = [];
 
@@ -177,8 +183,56 @@ export class YouTrackService {
     return {
       id: newIssue.idReadable,
       parentId: parentIssue.idReadable,
+      title,
+      description,
       warnings,
     };
+  }
+
+  async updateTicketDescription(
+    ticketId: string,
+    description: string,
+  ): Promise<{ id: string; title: string; description: string }> {
+    const client = this.getAxiosInstance();
+
+    // Verify ticket exists and fetch summary
+    let existingIssue: any;
+    try {
+      const verifyResponse = await client.get(`/api/issues/${ticketId}`, {
+        params: { fields: "id,idReadable,summary" },
+      });
+      existingIssue = verifyResponse.data;
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        throw new AppError(`Ticket ${ticketId} not found`, 404);
+      }
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        throw new AppError("Authentication or authorization error", 401);
+      }
+      throw new AppError(`Failed to verify ticket: ${error.message}`, 500);
+    }
+
+    // Update the description
+    try {
+      await client.post(
+        `/api/issues/${ticketId}`,
+        { description },
+        { params: { fields: "id" } },
+      );
+    } catch (error: any) {
+      if (error.response?.status === 400) {
+        throw new AppError(
+          `Failed to update ticket: ${error.response.data?.error_description || error.message}`,
+          400,
+        );
+      }
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        throw new AppError("Authentication or authorization error", 401);
+      }
+      throw new AppError(`Failed to update ticket: ${error.message}`, 500);
+    }
+
+    return { id: ticketId, title: existingIssue.summary, description };
   }
 
   async getTicketsChangedByRange(
