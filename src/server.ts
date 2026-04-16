@@ -30,6 +30,7 @@ export const startServer = (port: number | string) => {
     console.log(`  POST  /api/ticket/:parentTicketId/subtask`);
     console.log(`  PATCH /api/ticket/:ticketId/description`);
     console.log(`  GET   /api/tickets/changes/:from/:to`);
+    console.log(`  POST  /api/ticket/:ticketId/workitem`);
     console.log();
     console.log(pico.bold("Examples:"));
     console.log(`  curl http://localhost:${port}/health`);
@@ -53,6 +54,15 @@ export const startServer = (port: number | string) => {
     );
     console.log(`    -H "Content-Type: application/json" \``);
     console.log(`    -d '{"description": "**Updated** description"}'`);
+    console.log();
+    console.log(pico.bold("Log time on a ticket (PowerShell):"));
+    console.log(
+      `  curl.exe -X POST http://localhost:${port}/api/ticket/PROJECT-123/workitem \``,
+    );
+    console.log(`    -H "Content-Type: application/json" \``);
+    console.log(
+      `    -d '{"durationMinutes": 90, "workItemType": "Development"}'`,
+    );
   });
 };
 

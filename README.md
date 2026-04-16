@@ -8,6 +8,7 @@ A Node.js API service for interacting with YouTrack tickets.
 - Create a ticket as a subtask of an existing ticket
 - Update the description of an existing ticket (Markdown supported)
 - Fetch tickets changed within a date range
+- Log work items (time tracking) on a ticket
 - Health endpoint for monitoring
 - Environment variable configuration
 - Error handling
@@ -253,6 +254,65 @@ Response:
       "comments": []
     }
   ]
+}
+```
+
+---
+
+#### Log Work Item (Time Tracking)
+
+Logs a time tracking entry on a ticket.
+
+```
+POST /api/ticket/:ticketId/workitem
+```
+
+Parameters:
+
+- `ticketId`: The ticket ID in the format `PROJECT-123`
+
+Body (JSON):
+| Field | Required | Default | Description |
+|---|---|---|---|
+| `durationMinutes` | Yes | — | Time spent in whole minutes |
+| `workItemType` | No | `Development` | Work item type name |
+| `date` | No | today | Date in `YYYY-MM-DD` format |
+| `description` | No | — | Optional note for the entry |
+
+Example (PowerShell):
+
+```powershell
+curl.exe -X POST http://localhost:3000/api/ticket/PROJECT-123/workitem `
+  -H "Content-Type: application/json" `
+  -d '{"durationMinutes": 90}'
+```
+
+With all options:
+
+```powershell
+curl.exe -X POST http://localhost:3000/api/ticket/PROJECT-123/workitem `
+  -H "Content-Type: application/json" `
+  -d '{"durationMinutes": 60, "workItemType": "Testing", "date": "2026-04-16", "description": "Wrote unit tests"}'
+```
+
+Example (CMD):
+
+```cmd
+curl -X POST http://localhost:3000/api/ticket/PROJECT-123/workitem -H "Content-Type: application/json" -d "{\"durationMinutes\": 90}"
+```
+
+Response (`201 Created`):
+
+```json
+{
+  "status": "success",
+  "data": {
+    "id": "work-item-id",
+    "ticketId": "PROJECT-123",
+    "durationMinutes": 90,
+    "date": "4/16/2026",
+    "workItemType": "Development"
+  }
 }
 ```
 

@@ -134,3 +134,58 @@ youtrackRouter.get(
     }
   },
 );
+
+/**
+ * Log a work item (time tracking) on a ticket.
+ * Body: { durationMinutes, date?, description?, workItemType? }
+ * - durationMinutes: number (required)
+ * - date: YYYY-MM-DD string (optional, defaults to today)
+ * - description: string (optional)
+ * - workItemType: string (optional, e.g. "Development")
+ */
+youtrackRouter.post(
+  "/ticket/:ticketId/workitem",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { ticketId } = req.params;
+
+      if (!validateTicketId(ticketId)) {
+        throw new AppError(
+          "Invalid ticket ID format. Expected format: PROJECT-123",
+          400,
+        );
+      }
+
+      const { date, description, workItemType } = req.body;
+      const durationMinutes = Number(req.body.durationMinutes);
+
+      if (
+        !Number.isFinite(durationMinutes) ||
+        !Number.isInteger(durationMinutes) ||
+        durationMinutes <= 0
+      ) {
+        throw new AppError(
+          "durationMinutes is required and must be a positive integer",
+          400,
+        );
+      }
+
+      const workDate =
+        typeof date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(date)
+          ? date
+          : new Date().toISOString().slice(0, 10);
+
+      const result = await youtrackService.logWorkItem(
+        ticketId,
+        durationMinutes,
+        workDate,
+        typeof description === "string" ? description : "",
+        typeof workItemType === "string" ? workItemType : "Development",
+      );
+
+      res.status(201).json({ status: "success", data: result });
+    } catch (error) {
+      next(error);
+    }
+  },
+);

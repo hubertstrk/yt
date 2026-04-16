@@ -1,6 +1,6 @@
 import axios from "axios";
 import { AppError } from "../middleware/errorHandler";
-import { TicketInfo } from "../models/ticket";
+import { TicketInfo, WorkItem } from "../models/ticket";
 
 export class YouTrackService {
   private getAxiosInstance() {
@@ -295,6 +295,90 @@ export class YouTrackService {
         500,
       );
     }
+  }
+
+  /**
+   * Log a work item (time tracking entry) on a ticket.
+   * @param ticketId - The ticket ID (e.g. PROJECT-123)
+   * @param durationMinutes - Time spent in minutes
+   * @param date - ISO date string (YYYY-MM-DD); defaults to today
+   * @param description - Optional work description
+   * @param workItemType - Optional work item type name (e.g. "Development")
+   */
+  async logWorkItem(
+    ticketId: string,
+    durationMinutes: number,
+    date: string,
+    description: string,
+    workItemType: string,
+  ): Promise<WorkItem> {
+    const client = this.getAxiosInstance();
+
+    // Verify ticket exists
+    try {
+      await client.get(`/api/issues/${ticketId}`, {
+        params: { fields: "id" },
+      });
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        throw new AppError(`Ticket ${ticketId} not found`, 404);
+      }
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        throw new AppError("Authentication or authorization error", 401);
+      }
+      throw new AppError(`Failed to verify ticket: ${error.message}`, 500);
+    }
+
+    // YouTrack stores duration in minutes
+    let workItem: any;
+    try {
+      const body: Record<string, any> = {
+        date: new Date(date).getTime(),
+        duration: { minutes: durationMinutes },
+      };
+      if (description) {
+        body.text = description;
+      }
+      if (workItemType) {
+        // YouTrack requires the type ID, not just the name — look it up first
+        const typesResponse = await client.get(
+          "/api/admin/timeTrackingSettings/workItemTypes",
+          { params: { fields: "id,name" } },
+        );
+        const matchedType = typesResponse.data.find(
+          (t: any) => t.name?.toLowerCase() === workItemType.toLowerCase(),
+        );
+        if (matchedType) {
+          body.type = { id: matchedType.id };
+        }
+      }
+      const response = await client.post(
+        `/api/issues/${ticketId}/timeTracking/workItems`,
+        body,
+        { params: { fields: "id,date,duration(minutes),text,type(name)" } },
+      );
+      workItem = response.data;
+    } catch (error: any) {
+      if (error.response?.status === 400) {
+        throw new AppError(
+          `Failed to log work item: ${error.response.data?.error_description || error.message}`,
+          400,
+        );
+      }
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        throw new AppError("Authentication or authorization error", 401);
+      }
+      throw new AppError(`Failed to log work item: ${error.message}`, 500);
+    }
+
+    return {
+      id: workItem.id,
+      ticketId,
+      durationMinutes: workItem.duration?.minutes ?? durationMinutes,
+      date: new Date(workItem.date).toLocaleDateString(),
+      ...(workItem.text ? { description: workItem.text } : {}),
+      workItemType: workItem.type?.name || workItemType,
+    };
   }
 }
 
